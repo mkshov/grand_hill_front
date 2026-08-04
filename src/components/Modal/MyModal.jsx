@@ -1,6 +1,6 @@
 "use client";
 import React, { useRef } from "react";
-import emailjs from "emailjs-com";
+import { submitFeedback } from "@/utils/api/feedbackApi";
 
 import { Box, Button, TextField, Typography } from "@mui/material";
 import LoadingButton from "@mui/lab/LoadingButton";
@@ -15,19 +15,40 @@ const MyModal = () => {
   const handleClose = () => setOpen(false);
 
   const formRef = useRef();
-  const sendEmail = (e) => {
+  const [submitting, setSubmitting] = React.useState(false);
+
+  const sendEmail = async (e) => {
     e.preventDefault();
+    setSubmitting(true);
 
-    emailjs.sendForm("service_by1ehlm", "template_0ln86ec", formRef.current, "CJqh9bnj_JwtW_aZI").then(
-      (result) => {
+    if (formRef.current) {
+      const formData = new FormData(formRef.current);
+      const name = formData.get("from_name");
+      const email = formData.get("from_email");
+      const message = formData.get("message");
+
+      try {
+        await submitFeedback({
+          name,
+          email,
+          message,
+          is_agreed: true,
+        });
         toast.success("Ваше сообщение успешно отправлено!");
-      },
-      (error) => {
-        toast.error(`Ошибка! Статус ошибки - ${error?.status}`);
+        formRef.current.reset();
+        handleClose();
+      } catch (error) {
+        if (error?.status === 400 && error.data?.is_agreed) {
+          toast.error(error.data.is_agreed[0]);
+        } else if (error?.status === 429) {
+          toast.error("Слишком много запросов. Попробуйте позже.");
+        } else {
+          toast.error("Ошибка при отправке сообщения.");
+        }
+      } finally {
+        setSubmitting(false);
       }
-    );
-
-    e.currentTarget.reset();
+    }
   };
   return (
     <Box>
@@ -109,7 +130,7 @@ const MyModal = () => {
                 className="main-button"
                 type="submit"
                 value="Send Message"
-                // loading={state.submitting}
+                loading={submitting}
               >
                 Отправить
               </LoadingButton>

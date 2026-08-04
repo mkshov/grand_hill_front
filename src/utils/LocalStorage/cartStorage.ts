@@ -7,6 +7,7 @@ export interface CartItem {
   quantity: number;
   size?: string | null;
   height?: string | null;
+  size_id?: number;
 }
 
 export const getCart = (): CartItem[] => {

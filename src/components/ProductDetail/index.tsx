@@ -116,6 +116,15 @@ const ProductDetail: React.FC = () => {
 		const mainImg = product.images.find((img) => img.is_main);
 		const targetCartItemId = hasSizes ? `${product.id}-${selectedSize}-${selectedHeight}` : product.id.toString();
 
+		let size_id: number | undefined;
+		if (hasSizes && sizesData) {
+			const sizeName = selectedHeight ? `${selectedSize}/${selectedHeight}` : selectedSize;
+			const matchedSize = sizesData.availability.find(a => a.size_name === sizeName);
+			if (matchedSize) {
+				size_id = matchedSize.size_id;
+			}
+		}
+
 		addToCart({
 			cartItemId: targetCartItemId,
 			id: product.id,
@@ -125,6 +134,7 @@ const ProductDetail: React.FC = () => {
 			quantity: 1,
 			size: selectedSize,
 			height: selectedHeight,
+			size_id: size_id,
 		});
 	};
 

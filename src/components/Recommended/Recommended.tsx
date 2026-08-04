@@ -1,8 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { Button, Typography, Skeleton } from "@mui/material";
-import { useRouter } from "next/navigation";
-import { fetchProducts, ApiProduct, getMainImage } from "@/utils/api/productsApi";
+import { useParams, useRouter } from "next/navigation";
+import { fetchRecommendedProducts, fetchPopularProducts, ApiProduct, getMainImage } from "@/utils/api/productsApi";
 import "../../app/suits/products.css";
 
 const Recommended: React.FC = () => {
@@ -10,12 +10,22 @@ const Recommended: React.FC = () => {
   const [recommended, setRecommended] = useState<ApiProduct[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const params = useParams();
+  const id = params?.id;
+  const productIdRaw = Array.isArray(id) ? id[0] : id;
+  const productId = productIdRaw ? parseInt(productIdRaw, 10) : undefined;
+
   useEffect(() => {
-    const loadRandomProducts = async () => {
+    const loadRecommended = async () => {
       try {
-        const data = await fetchProducts({ limit: 40 });
-        const allProducts = data.results;
+        let allProducts: ApiProduct[] = [];
         
+        if (productId) {
+          allProducts = await fetchRecommendedProducts(productId);
+        } else {
+          allProducts = await fetchPopularProducts();
+        }
+
         // Shuffle array and pick first 3
         const shuffled = [...allProducts].sort(() => 0.5 - Math.random());
         const selected = shuffled.slice(0, 3);
@@ -27,8 +37,8 @@ const Recommended: React.FC = () => {
         setLoading(false);
       }
     };
-    loadRandomProducts();
-  }, []);
+    loadRecommended();
+  }, [productId]);
 
   const handleClickNavigate = (id: number) => () => {
     // We default to /suits/suit/[id] for all products since we unified the detail page wrapper

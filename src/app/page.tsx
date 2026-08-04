@@ -236,11 +236,7 @@ const HomePage = () => {
 									Он начал свой путь еще в 1979 году. Norvell стремится вывести на рынок мужской одежды высококачественную продукцию, чтобы люди,
 									надевающие костюм или пальто, чувствовали себя уверенно и комфортно.
 								</Typography>
-								<Button
-									onClick={handleClickNavigate("about-us")}
-									sx={{ border: "2px solid white !important", color: "white !important" }}
-									className="main-button"
-								>
+								<Button onClick={handleClickNavigate("about-us")} sx={{ borderRadius: 0 }} variant="outlined" className="bespoke-btn">
 									Узнать больше
 								</Button>
 							</Box>
@@ -296,7 +292,7 @@ const HomePage = () => {
 							Создайте костюм, который идеально отражает вашу индивидуальность. Наши опытные портные учтут каждую деталь, от выбора премиальной ткани
 							до финальной строчки, чтобы обеспечить безупречную посадку.
 						</Typography>
-						<Button onClick={handleClickNavigate("contacts-us")} variant="outlined" className="bespoke-btn">
+						<Button onClick={handleClickNavigate("contacts-us")} variant="outlined" sx={{ borderRadius: 0 }} className="bespoke-btn">
 							ЗАПИСАТЬСЯ НА ПРИМЕРКУ
 						</Button>
 					</Box>
@@ -309,11 +305,11 @@ const HomePage = () => {
 						<Typography variant="h3" sx={{ mb: 2, letterSpacing: "2px" }}>
 							ПРИВИЛЕГИИ NORVELL CLUB
 						</Typography>
-						<Typography variant="body1" sx={{ maxWidth: "600px", margin: "0 auto", mb: 4, opacity: 0.9 }}>
+						<Typography variant="body1" sx={{ maxWidth: "600px", margin: "0 auto", mb: 4, opacity: 0.9, fontSize: "1.1rem" }}>
 							Присоединяйтесь к закрытому клубу клиентов. Получайте ранний доступ к новым коллекциям, приглашения на закрытые мероприятия и
 							персональные предложения.
 						</Typography>
-						<Button variant="contained" className="vip-btn" onClick={handleClickNavigate("about-us")}>
+						<Button variant="contained" className="vip-btn" sx={{ borderRadius: 0 }} onClick={handleClickNavigate("about-us")}>
 							ВСТУПИТЬ В КЛУБ
 						</Button>
 					</Box>

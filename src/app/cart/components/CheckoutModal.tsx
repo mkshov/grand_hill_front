@@ -1,6 +1,6 @@
 "use client";
 import React, { useRef } from "react";
-import emailjs from "emailjs-com";
+import { submitCheckout } from "@/utils/api/checkoutApi";
 import { Box, TextField, Typography, Modal } from "@mui/material";
 import LoadingButton from "@mui/lab/LoadingButton";
 import { toast } from "sonner";
@@ -21,43 +21,50 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ open, handleClose, cart, 
   const orderDetails = cart.map((item) => `${item.title} - ${item.quantity} шт. - ${item.price * item.quantity}₽`).join("\n");
   const totalPrice = cart.reduce((total, item) => total + item.price * item.quantity, 0);
 
-  const sendEmail = (e: React.FormEvent<HTMLFormElement>) => {
+  const sendEmail = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSubmitting(true);
 
     if (formRef.current) {
-      // Добавляем скрытое поле с данными заказа
-      const orderInput = document.createElement("input");
-      orderInput.type = "hidden";
-      orderInput.name = "order_details";
-      orderInput.value = `${orderDetails}\nИтого: ${totalPrice}₽`;
-      formRef.current.appendChild(orderInput);
+      const formData = new FormData(formRef.current);
+      const name = formData.get("from_name") as string;
+      const phone = formData.get("phone_number") as string;
+      const email = formData.get("from_email") as string;
+      const address = formData.get("city") as string;
 
-      emailjs
-        .sendForm(
-          "service_by1ehlm", // Ваш Service ID
-          "template_yilo0ji", // Ваш Template ID
-          formRef.current,
-          "CJqh9bnj_JwtW_aZI" // Ваш Public Key
-        )
-        .then(
-          () => {
-            toast.success("Ваш заказ успешно оформлен!");
-            clearCart(); // Очищаем корзину
-            setCart([]); // Обновляем состояние корзины
-            handleClose(); // Закрываем модалку
-            formRef.current?.reset();
-          },
-          (error) => {
-            toast.error(`Ошибка! Статус ошибки - ${error?.status}`);
-          }
-        )
-        .finally(() => {
-          setSubmitting(false);
-          if (orderInput && formRef.current) {
-            formRef.current.removeChild(orderInput); // Удаляем временное поле
-          }
-        });
+      const items = cart.map((item) => ({
+        product: item.id,
+        size: item.size_id,
+        quantity: item.quantity,
+      }));
+
+      const payload = {
+        name,
+        phone,
+        email,
+        address,
+        is_agreed: true,
+        items,
+      };
+
+      try {
+        await submitCheckout(payload);
+        toast.success("Ваш заказ успешно оформлен!");
+        clearCart(); // Очищаем корзину
+        setCart([]); // Обновляем состояние корзины
+        handleClose(); // Закрываем модалку
+        formRef.current.reset();
+      } catch (error: any) {
+        if (error?.status === 400 && error.data?.detail) {
+          toast.error(error.data.detail);
+        } else if (error?.status === 429) {
+          toast.error("Слишком много запросов. Попробуйте позже.");
+        } else {
+          toast.error("Ошибка при оформлении заказа.");
+        }
+      } finally {
+        setSubmitting(false);
+      }
     }
   };
 

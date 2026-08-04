@@ -1,6 +1,6 @@
 "use client";
 import React, { useRef, FormEvent } from "react";
-import emailjs from "emailjs-com";
+import { submitFeedback } from "@/utils/api/feedbackApi";
 import { Box, TextField, Typography } from "@mui/material";
 import EmailIcon from "@mui/icons-material/Email";
 import LoadingButton from "@mui/lab/LoadingButton";
@@ -12,21 +12,38 @@ import { toast } from "sonner";
 
 const ContactsUs: React.FC = () => {
   const formRef = useRef<HTMLFormElement>(null);
+  const [submitting, setSubmitting] = React.useState(false);
 
-  const sendEmail = (e: FormEvent<HTMLFormElement>) => {
+  const sendEmail = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setSubmitting(true);
 
     if (formRef.current) {
-      emailjs.sendForm("service_by1ehlm", "template_0ln86ec", formRef.current, "CJqh9bnj_JwtW_aZI").then(
-        (result) => {
-          toast.success("Ваше сообщение успешно отправлено!");
-        },
-        (error: any) => {
-          toast.error(`Ошибка! Статус ошибки - ${error?.status}`);
-        }
-      );
+      const formData = new FormData(formRef.current);
+      const name = formData.get("from_name") as string;
+      const email = formData.get("from_email") as string;
+      const message = formData.get("message") as string;
 
-      e.currentTarget.reset();
+      try {
+        await submitFeedback({
+          name,
+          email,
+          message,
+          is_agreed: true,
+        });
+        toast.success("Ваше сообщение успешно отправлено!");
+        formRef.current.reset();
+      } catch (error: any) {
+        if (error?.status === 400 && error.data?.is_agreed) {
+          toast.error(error.data.is_agreed[0]);
+        } else if (error?.status === 429) {
+          toast.error("Слишком много запросов. Попробуйте позже.");
+        } else {
+          toast.error("Ошибка при отправке сообщения.");
+        }
+      } finally {
+        setSubmitting(false);
+      }
     }
   };
 
@@ -111,7 +128,7 @@ const ContactsUs: React.FC = () => {
               }}
               className="main-button"
               type="submit"
-              // loading={state.submitting}
+              loading={submitting}
             >
               Отправить
             </LoadingButton>
